@@ -31,21 +31,24 @@ void ble_evt_adv_report(ble_evt_t const* p_ble_evt) {
   // TODO: extract the fields we care about (Peer address and data
   ble_gap_addr_t peer_address = adv_report->peer_addr;
   ble_data_t  data = adv_report->data;
-  // TODO: filter on Peer address
-  if (peer_address.addr_type != BLE_GAP_ADDR_TYPE_ANONYMOUS && peer_address.addr[0] == 0x05) { // replace with condition on peer address
+  if (peer_address.addr_type != BLE_GAP_ADDR_TYPE_ANONYMOUS && peer_address.addr[0] == 0x05 && peer_address.addr[1] == 0x00 && peer_address.addr[2] == 0x49) { // replace with condition on peer address
     // if address matches C0:98:E5:49:FF:FD, loop until we find field 0xFF
     printf("Address: %x:%x:%x:%x:%x:%x\n", peer_address.addr[0], peer_address.addr[1], peer_address.addr[2], peer_address.addr[3], peer_address.addr[4], peer_address.addr[5]);
-    printf("%.*s\n", data.len - 7, data.p_data + 7);
     printf("Data Length %d \n", data.len);
 
-    // while (1) {
-    //   // TODO: get length of field
-    //   // TODO: get type of field: if type is 0xFF, we found it!
-    //
-    //   // Print the data as a string. i.e. printf("%s\n", data + offset)
-    //   // Otherwise, skip ahead by the length of the current field
-    //   printf("%s/n", data->p_data);
-    // }
+    uint16_t curr_pos = 3;
+
+    while (curr_pos < data.len) {
+      // TODO: get length of field
+      // TODO: get type of field: if type is 0xFF, we found it!
+
+      // Print the data as a string. i.e. printf("%s\n", data + offset)
+      // Otherwise, skip ahead by the length of the current field
+      uint8_t len = data.p_data[curr_pos];
+      uint8_t type = data.p_data[curr_pos+1];
+      printf("%.*s\n", len-1, data.p_data + 2 + curr_pos);
+      curr_pos += len + 1;
+    }
   }
 }
 
@@ -65,8 +68,6 @@ int main(void) {
   simple_ble_app = simple_ble_init(&ble_config);
   advertising_stop();
   scanning_start();
-
-  // TODO: Start scanning
 
   while(1) {
     // Sleep while SoftDevice handles BLE
