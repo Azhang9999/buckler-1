@@ -101,7 +101,7 @@
 #define APP_BLE_CONN_CFG_TAG            1                                   /**< A tag identifying the SoftDevice BLE configuration. */
 #define APP_BLE_OBSERVER_PRIO           3                                   /**< Application's BLE observer priority. You shouldn't need to modify this value. */
 
-#define USE_APP_CONFIG 1
+#define USE_APP_CONFIG
 
 BLE_LED_SERVICE_CLIENT_DEF(m_ble_led_service_client);                       /**< Main structure used by the LED Service client module. */
 NRF_BLE_GATT_DEF(m_gatt);                                       /**< GATT module instance. */
