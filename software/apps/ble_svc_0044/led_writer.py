@@ -30,7 +30,9 @@ def connect_to_bucklers(bucklers):
         except bluepy.btle.BTLEInternalError:
             pass
         if state != 'conn':
+            print("Connecting to " + addresses[i])
             bucklers[i].connect(addresses[i])
+            print("Connected to " + addresses[i])
     return bucklers
 
 def unpack(data):
