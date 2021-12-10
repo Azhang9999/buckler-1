@@ -22,11 +22,16 @@ BUCKLER_SERVICE_UUID = "32e61089-2b22-4db5-a914-43ce41986c70"
 DATA_CHAR_UUID    = "32e6108a-2b22-4db5-a914-43ce41986c70"
 INSTRUCTION_CHAR_UUID    = "32e6108b-2b22-4db5-a914-43ce41986c70"
 
-def connect_to_peripheral(address):
-    print("Connecting to " + address)
-    periph = Peripheral(address)
-    print("Connected to " + address)
-    return periph
+def connect_to_bucklers(bucklers):
+    for i in range(len(bucklers)):
+        state = ""
+        try:
+            state = bucklers[i].getState()
+        except bluepy.btle.BTLEInternalError:
+            pass
+        if state != 'conn':
+            buckler[i].connect(addresses[i])
+    return bucklers
 
 def unpack(data):
     return struct.unpack('f', data[0:4]) + struct.unpack('f', data[4:8]) + struct.unpack('f', data[8:12])
@@ -57,20 +62,8 @@ def main():
     while True:
         try:
             print("connecting")
-            for i in range(len(bucklers)):
-                state = ""
-                try:
-                    state = bucklers[i].getState()
-                except bluepy.btle.BTLEInternalError:
-                    pass
-                if state != 'conn':
-                    buckler[i].connect(addresses[i])
-
-            #characteristics = buckler.getCharacteristics(startHnd=0x0019, endHnd=0xFFFF, uuid=None)
-            #for characteristic in characteristics:
-            #    print("{}, hnd={}, supports {}".format(characteristic, hex(characteristic.handle),  characteristic.propertiesToString()))
-            # Get service
-            # sv = buckler.getServiceByUUID(LED_SERVICE_UUID)
+            bucklers = connect_to_bucklers(bucklers)
+ 
             run(bucklers)
             
         except bluepy.btle.BTLEDisconnectError:
@@ -80,3 +73,8 @@ def main():
         b.disconnect()
 
 main()
+           #characteristics = buckler.getCharacteristics(startHnd=0x0019, endHnd=0xFFFF, uuid=None)
+            #for characteristic in characteristics:
+            #    print("{}, hnd={}, supports {}".format(characteristic, hex(characteristic.handle),  characteristic.propertiesToString()))
+            # Get service
+            # sv = buckler.getServiceByUUID(LED_SERVICE_UUID)
