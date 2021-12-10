@@ -102,7 +102,7 @@ void ble_setup() {
 int main(void) {
   display_setup();
   ble_setup();
-  float p* = (float *)&data[4]
+  float *p = (float *)&data[4];
   *p = 3.14f;
   
   while(1) {

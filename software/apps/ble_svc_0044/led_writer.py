@@ -13,6 +13,7 @@ addr1 = 'C0:98:E5:49:00:44'
 addr2 = 'C0:98:E5:49:00:45'
 
 addresses = [addr1, addr2]
+addresses = [addr2]
 
 # if len(addr) != 17:
 #     raise ValueError("Invalid address supplied")
@@ -42,7 +43,7 @@ def run(bucklers):
         for ch in data_chs:
             data = ch.read()
             print(data)
-            char = sturct.unpack(data)
+            char = struct.unpack(data)
             #char = [int(d) for d in data]
             print(char)
         for ch in instruction_chs:
