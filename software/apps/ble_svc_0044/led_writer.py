@@ -28,7 +28,7 @@ def connect_to_peripheral(address):
     print("Connected to " + address)
     return periph
 
-def unback(data):
+def unpack(data):
     return struct.unpack('f', data[0:4]) + struct.unpack('f', data[4:8]) + struct.unpack('f', data[8:12])
 
 def run(bucklers):
