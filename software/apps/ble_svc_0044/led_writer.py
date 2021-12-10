@@ -28,6 +28,8 @@ def connect_to_peripheral(address):
     print("Connected to " + address)
     return periph
 
+def unback(data):
+    return struct.unpack('f', data[0:4]) + struct.unpack('f', data[4:8]) + struct.unpack('f', data[8:12])
 
 def run(bucklers):
     svs = [b.getServiceByUUID(BUCKLER_SERVICE_UUID) for b in bucklers]
@@ -43,31 +45,30 @@ def run(bucklers):
         for ch in data_chs:
             data = ch.read()
             print(data)
-            char = struct.unpack('f', data)
+            char = unpack(data)
             #char = [int(d) for d in data]
             print(char)
         for ch in instruction_chs:
             ch.write(bytearray([i, i+1, i+2]))
         i+=1
 
+def main():
+    while True:
+        try:
+            print("connecting")
+            bucklers = [connect_to_peripheral(a) for a in addresses]
 
-try:
-    print("connecting")
-    bucklers = [connect_to_peripheral(a) for a in addresses]
-
-    #characteristics = buckler.getCharacteristics(startHnd=0x0019, endHnd=0xFFFF, uuid=None)
-    #for characteristic in characteristics:
-    #    print("{}, hnd={}, supports {}".format(characteristic, hex(characteristic.handle),  characteristic.propertiesToString()))
-    # Get service
-    # sv = buckler.getServiceByUUID(LED_SERVICE_UUID)
-    run(bucklers)
-    
-except bluepy.btle.BTLEDisconnectError:
-    print("Disconnected. Trying to Reconnect")
-    bucklers = [connect_to_peripheral(a) for a in addresses]
-    run(bucklers)
-
-finally:
+            #characteristics = buckler.getCharacteristics(startHnd=0x0019, endHnd=0xFFFF, uuid=None)
+            #for characteristic in characteristics:
+            #    print("{}, hnd={}, supports {}".format(characteristic, hex(characteristic.handle),  characteristic.propertiesToString()))
+            # Get service
+            # sv = buckler.getServiceByUUID(LED_SERVICE_UUID)
+            run(bucklers)
+            
+        except bluepy.btle.BTLEDisconnectError:
+            print("Disconnected. Trying to Reconnect")
+            
     for b in bucklers:
         b.disconnect()
 
+main()
