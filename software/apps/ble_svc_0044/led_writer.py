@@ -43,7 +43,7 @@ def run(bucklers):
         for ch in data_chs:
             data = ch.read()
             print(data)
-            char = struct.unpack(data)
+            char = struct.unpack('f', data)
             #char = [int(d) for d in data]
             print(char)
         for ch in instruction_chs:
