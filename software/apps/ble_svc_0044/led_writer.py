@@ -58,7 +58,7 @@ def run(bucklers):
         i+=1
 
 def main():
-    bucklers = [Peripheral for a in addresses]
+    bucklers = [Peripheral() for a in addresses]
     while True:
         try:
             print("connecting")
