@@ -53,10 +53,18 @@ def run(bucklers):
         i+=1
 
 def main():
+    bucklers = [Peripheral for a in addresses]
     while True:
         try:
             print("connecting")
-            bucklers = [connect_to_peripheral(a) for a in addresses]
+            for i in range(len(bucklers)):
+                state = ""
+                try:
+                    state = bucklers[i].getState()
+                except bluepy.btle.BTLEInternalError:
+                    pass
+                if state != 'conn':
+                    buckler[i].connect(addresses[i])
 
             #characteristics = buckler.getCharacteristics(startHnd=0x0019, endHnd=0xFFFF, uuid=None)
             #for characteristic in characteristics:
