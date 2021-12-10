@@ -36,7 +36,7 @@ def connect_to_bucklers(bucklers):
     return bucklers
 
 def unpack(data):
-    return struct.unpack('f', data[0:4]) + struct.unpack('f', data[4:8]) + struct.unpack('f', data[8:12])
+    return struct.unpack('I', data[0:4]) + struct.unpack('I', data[4:8]) + struct.unpack('f', data[8:12]) + struct.unpack('I', data[12:16])
 
 def run(bucklers):
     svs = [b.getServiceByUUID(BUCKLER_SERVICE_UUID) for b in bucklers]
