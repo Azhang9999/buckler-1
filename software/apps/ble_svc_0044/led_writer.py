@@ -42,7 +42,8 @@ def run(bucklers):
         for ch in data_chs:
             data = ch.read()
             print(data)
-            char = [int(d) for d in data]
+            char = sturct.unpack(data)
+            #char = [int(d) for d in data]
             print(char)
         for ch in instruction_chs:
             ch.write(bytearray([i, i+1, i+2]))

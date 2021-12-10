@@ -34,7 +34,7 @@ static simple_ble_service_t buckler_service = {{
 }};
 
 static simple_ble_char_t data_char = {.uuid16 = 0x108a};
-static uint8_t data[4] = {0, 0, 0, 0}; // clock, encoder, ultrasonic, checkpoint
+static uint8_t data[12] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}; // clock, encoder, ultrasonic, checkpoint
 static simple_ble_char_t instruction_char = {.uuid16 = 0x108b};
 static uint8_t instruction[3] = {0, 0, 0}; // speed, follow_distance, clock_offset
 
@@ -98,10 +98,13 @@ void ble_setup() {
   simple_ble_adv_only_name();
 }
 
+
 int main(void) {
   display_setup();
   ble_setup();
-
+  float p* = (float *)&data[4]
+  *p = 3.14f;
+  
   while(1) {
     power_manage();
   }
