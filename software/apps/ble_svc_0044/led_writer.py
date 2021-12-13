@@ -39,6 +39,8 @@ def unpack(data):
     return struct.unpack('I', data[0:4]) + struct.unpack('I', data[4:8]) + struct.unpack('f', data[8:12]) + struct.unpack('I', data[12:16])
 
 def run(bucklers):
+    start = time.time_ns()
+
     svs = [b.getServiceByUUID(BUCKLER_SERVICE_UUID) for b in bucklers]
     # Get characteristic
     # ch = sv.getCharacteristics(LED_CHAR_UUID)[0]
@@ -51,15 +53,20 @@ def run(bucklers):
         # time.sleep(0.5)
         for ch in data_chs:
             data = ch.read()
-            print(data)
+            # print(data)
             char = unpack(data)
             #char = [int(d) for d in data]
             print(char)
         for ch in instruction_chs:
-            ch.write(bytearray([i, i+1, i+2]))
+            curr_time = (time.time_ns() - start)//1000
+            print(curr_time)
+            send = struct.pack('I', curr_time)
+            print(send)
+            ch.write(bytearray(struct.pack('B', i) + struct.pack('B', 0) + struct.pack('B', 0) + send))
         i+=1
 
 def main():
+
     bucklers = [Peripheral() for a in addresses]
     while True:
         try:

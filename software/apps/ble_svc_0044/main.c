@@ -16,7 +16,7 @@
 #define ID 0x0045
 
 static nrf_drv_spi_t spi_instance = NRF_DRV_SPI_INSTANCE(1);
-static uint32_t offset = 0;
+static int32_t offset = 0;
 static uint8_t latency = 0;
 static uint32_t ble_times[2] = {0, 0};
 static uint32_t beacon_times[2] = {0, 0};
@@ -88,15 +88,17 @@ void ble_evt_write(ble_evt_t const* p_ble_evt) {
       // CRUDE PTP: ASSUME COMPUTATION TO BE INSTANTANEOUS
       
       beacon_times[0] = beacon_times[1];
-      beacon_times[1] = (uint32_t)instruction[2];
+      beacon_times[1] = *((uint32_t *)(instruction[2]));
 
-      if (beacon_times[0] != 0) {
+      if (beacon_times[0] != 0 && beacon_times[1] > beacon_times[0]) {
         latency = (beacon_times[1] - beacon_times[0])/2;
         offset = time - beacon_times[1] - latency;
       }
 
+      printf("Current Time: %d, Offset: %d, Latency: %d \n", time, offset, latency);
+
       char buf[16];
-      snprintf(buf, 16, "LAT: %d", latency);
+      snprintf(buf, 16, "OFF: %d", offset);
       display_write(buf, DISPLAY_LINE_1);
     }
 }
