@@ -11,9 +11,20 @@ import time
 # args = parser.parse_args()
 addr1 = 'C0:98:E5:49:00:44'
 addr2 = 'C0:98:E5:49:00:45'
+#addr3 = 'C0:98:E5:49:00:46'
+
 
 addresses = [addr1, addr2]
-addresses = [addr2]
+
+
+DEFAULT_SPEED = 90
+MAX_SPEED_OFFSET = 125
+MIN_SPEED_OFFSET = 30
+# addresses = [addr2]
+
+F_VALUE = 0.5 # 1 worked 
+GOAL_DISTANCE = 70 #in mm
+GOAL_ENCODER = int((GOAL_DISTANCE + 300)// 0.65)
 
 # if len(addr) != 17:
 #     raise ValueError("Invalid address supplied")
@@ -36,10 +47,17 @@ def connect_to_bucklers(bucklers):
     return bucklers
 
 def unpack(data):
-    return struct.unpack('I', data[0:4]) + struct.unpack('I', data[4:8]) + struct.unpack('f', data[8:12]) + struct.unpack('I', data[12:16])
+    return struct.unpack('I', data[0:4]) + struct.unpack('I', data[4:8]) + struct.unpack('I', data[8:12]) + struct.unpack('I', data[12:16])
+
+
+def format_instructions(instr):
+    return struct.pack('B', instr[0]) + struct.pack('B', instr[1]) + struct.pack('B', instr[2])
 
 def run(bucklers):
+    print("Start RUN")
     start = time.time_ns()
+
+
 
     svs = [b.getServiceByUUID(BUCKLER_SERVICE_UUID) for b in bucklers]
     # Get characteristic
@@ -47,23 +65,73 @@ def run(bucklers):
     data_chs = [s.getCharacteristics(DATA_CHAR_UUID)[0] for s in svs] 
     instruction_chs = [s.getCharacteristics(INSTRUCTION_CHAR_UUID)[0] for s in svs] 
 
-    i = 0
+    checkpoint = [(0, 0) for _ in bucklers]
+    robot_data = [[] for _ in bucklers]
+    DEFAULT_INSTRUCTION = [1, DEFAULT_SPEED, GOAL_DISTANCE] # Lead Toggle, speed, follow_distance
+    send_instructions = [DEFAULT_INSTRUCTION[:] for _ in bucklers]
+    bar = 0
+    intersection = []
+    print(GOAL_ENCODER)
     while True:
+
         #input("Press any key to toggle the LED")
         # time.sleep(0.5)
-        for ch in data_chs:
+        for num in range(len(data_chs)):
+            ch = data_chs[num]
             data = ch.read()
-            # print(data)
-            char = unpack(data)
-            #char = [int(d) for d in data]
-            print(char)
-        for ch in instruction_chs:
+            try: 
+                char = unpack(data)
+                robot_data[num] = char
+                if char[3] != checkpoint[num][1]:
+                    checkpoint[num] = (char[0], char[3])
+                    if char[3] == 1:
+                        intersection.append(num)
+                        print(intersection)
+
+                    if char[3] == 2:
+                        if num in intersection:
+                            intersection.remove(num)
+                        send_instructions[num] = DEFAULT_INSTRUCTION[:]
+            except struct.error:
+                pass
+
+            ## PRINTING OUT DATA
+            print("ROBOT READ {0}".format(num))
+            print(char[1])
+
+
+        speed_difference = 0
+        for i in range(len(intersection)):
+            if i == 0:
+                send_instructions[intersection[i]] = DEFAULT_INSTRUCTION[:]
+            else:
+                curr_car = intersection[i]
+                prev_car = intersection[i-1]
+                print("CHANGING SPEED FOR CAR {0} AND PREV CAR {1}".format(curr_car, prev_car))
+
+                curr_car_encoder = robot_data[curr_car][1]
+                prev_car_encoder = robot_data[prev_car][1]
+                new_speed_difference = int(((prev_car_encoder - curr_car_encoder) - GOAL_ENCODER)*F_VALUE)
+                print(curr_car_encoder, prev_car_encoder, GOAL_ENCODER)
+
+                curr_car_speed = send_instructions[curr_car][1]
+                new_speed = new_speed_difference - speed_difference + DEFAULT_SPEED
+                speed_difference = new_speed_difference
+                actual_speed = min(max(new_speed, MIN_SPEED_OFFSET), MAX_SPEED_OFFSET)
+                speed_difference += actual_speed - new_speed
+                send_instructions[curr_car][1] = actual_speed
+
+                print("CHANGING SPEED TO {0} DESIRED SPEED {1}".format(actual_speed, new_speed))
+
+        print(send_instructions)
+        print(intersection)
+        for num in range(len(instruction_chs)):
+            # print("ROBOT {0}".format(num))
+            # print(send_instructions[num][1])
+            ch = instruction_chs[num]
             curr_time = (time.time_ns() - start)//1000
-            print(curr_time)
-            send = struct.pack('I', curr_time)
-            print(send)
-            ch.write(bytearray(struct.pack('B', i) + struct.pack('B', 0) + struct.pack('B', 0) + send))
-        i+=1
+            curr_time = struct.pack('I', curr_time)
+            ch.write(bytearray(format_instructions(send_instructions[num]) + curr_time))
 
 def main():
 
@@ -72,7 +140,7 @@ def main():
         try:
             print("connecting")
             bucklers = connect_to_bucklers(bucklers)
- 
+            print("Conencted to all bucklers")
             run(bucklers)
             
         except bluepy.btle.BTLEDisconnectError:
